@@ -12,6 +12,9 @@ struct OnboardingView: View {
     
     @AppStorage("onboarding") var isOnboardingViewActive: Bool = true
     
+    @State private var buttonWidth: Double = UIScreen.main.bounds.width - 80
+    @State private var buttonOffset: CGFloat = 0
+    
     // MARK: - BODY
     
     var body: some View {
@@ -77,7 +80,8 @@ struct OnboardingView: View {
                     HStack {
                         Capsule()
                             .fill(Color("ColorRed"))
-                            .frame(width: 80)
+                        // permet à la capsule de base de suivre le boutton ( gesture ) grace au + 80 
+                            .frame(width: buttonOffset + 80)
                         
                         Spacer()
                     }
@@ -95,14 +99,31 @@ struct OnboardingView: View {
                         }
                         .foregroundColor(.white)
                         .frame(width: 80, height: 80, alignment: .center)
-                        .onTapGesture {
-                            isOnboardingViewActive = false
-                        }
+                        .offset(x: buttonOffset)
+                        .gesture(
+                            DragGesture()
+                                .onChanged { gesture in
+                                    if gesture.translation.width > 0  && buttonOffset <= buttonWidth - 80 {
+                                        buttonOffset = gesture.translation.width
+                                    }
+                                }
+                            // permet au bouton de revenir au début s'il ne va pas jusqu'au bout
+                                .onEnded { _ in
+                                    // si le bouton dépasse la moitié alors ok
+                                    if buttonOffset > buttonWidth / 2 {
+                                        buttonOffset = buttonWidth - 80
+                                        isOnboardingViewActive = false
+                                    } else {
+                                        // sinon tu reviens à la potision initial
+                                        buttonOffset = 0
+                                    }
+                                }
+                        ) //: GESTURE
                         
                         Spacer()
                     }
                 } //: FOOTER
-                .frame(height: 80, alignment: .center)
+                .frame(width: buttonWidth, height: 80, alignment: .center)
                 .padding()
             } //: VSTACK
         } //: ZSTACK
